@@ -10,11 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.0",
-    "got": "^12.0.3",
     "node-emoji": "^1.11.0",
-    "oauth-1.0a": "^2.2.6",
-    "querystring": "^0.2.1",
-    "twitter-api-client": "^1.5.2",
-    "twitter-api-v2": "^1.11.2",
+    "twitter-api-client": "^1.5.2"
   }
 }
