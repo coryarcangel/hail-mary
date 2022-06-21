@@ -20,7 +20,7 @@ const sendTweet = async (status) => {
   })
 }
 
-const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
+const TEST_MODE = true; //Won't tweet, + lots of extra logs if true
 const TOTAL_MAX_REPEATS = 10;
 const NOTES_PER_CHORD = 3;
 const MIN_CHORDS = 3;
@@ -46,7 +46,8 @@ const octatonicNotes = [0,1,3,4,6,7,9,10];
 const chord = (i,totalChords,transpose) => {
   //Divide number of chords into percentage jumps.
   let octatonicLikelihood = (1/totalChords)* i;
-  let maxRepeats = TOTAL_MAX_REPEATS * octatonicLikelihood;
+  //parabola, from 0 - Max over set of chords
+  let maxRepeats =(TOTAL_MAX_REPEATS/totalChords) * Math.pow(Math.pow(totalChords,2) - Math.pow(i-totalChords,2),.5);
   //likelihood of 1 at first is 100%, and likelihood of 10/100 at end is 100%
   let repeats = 1 + rand(maxRepeats);
   TEST_MODE && console.log(`Chord ${i}: `,Math.floor(octatonicLikelihood*100)+"% octatonic, max repeats:",maxRepeats);
