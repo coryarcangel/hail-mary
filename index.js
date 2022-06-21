@@ -2,6 +2,7 @@ require('dotenv').config()
 const {TwitterClient} = require('twitter-api-client')
 const fs = require("fs")
 const emoji = require('node-emoji')
+
 const twitterClient = new TwitterClient({
     apiKey: process.env.TWITTER_API_KEY,
     apiSecret: process.env.TWITTER_API_SECRET,
@@ -9,8 +10,21 @@ const twitterClient = new TwitterClient({
     accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 })
 
-//Set this to true to get helpful logs!
-const TEST_MODE = true;
+const sendTweet = async (status) => {
+  twitterClient.tweets.statusesUpdate({
+      status: status
+  }).then (response => {
+      console.log("Tweeted!", response)
+  }).catch(err => {
+      console.error(err)
+  })
+}
+
+const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
+const TOTAL_MAX_REPEATS = 10;
+const NOTES_PER_CHORD = 3;
+const MIN_CHORDS = 3;
+const MAX_CHORDS = 10;
 
 const randomEmojiString = (count) => {
   let output = "";
@@ -32,12 +46,13 @@ const octatonicNotes = [0,1,3,4,6,7,9,10];
 const chord = (i,totalChords,transpose) => {
   //Divide number of chords into percentage jumps.
   let octatonicLikelihood = (1/totalChords)* i;
-  TEST_MODE && console.log(`Octatonic likelihood for chord ${i}: `,octatonicLikelihood)
-  let repeats = 1 + rand((10 * octatonicLikelihood));
-  TEST_MODE && console.log(`Max repeats for chord ${i}: `,repeats)
+  let maxRepeats = TOTAL_MAX_REPEATS * octatonicLikelihood;
+  //likelihood of 1 at first is 100%, and likelihood of 10/100 at end is 100%
+  let repeats = 1 + rand(maxRepeats);
+  TEST_MODE && console.log(`Chord ${i}: `,Math.floor(octatonicLikelihood*100)+"% octatonic, max repeats:",maxRepeats);
   let notes = [];
   //Add unique notes to the chord until we have 3
-  while(notes.length < 3){
+  while(notes.length < NOTES_PER_CHORD){
     let note;
     //For each note, determine whether we will def add an octotonic or not.
     if(Math.random()<octatonicLikelihood){
@@ -55,15 +70,15 @@ const chord = (i,totalChords,transpose) => {
   if(transpose){
     notes = notes.map(n => n+1);
   }
-  TEST_MODE && console.log(`Notes in chord ${i}: `,notes)
-  notes = notes.map(n => noteNames[n%noteNames.length]) // convert from numbers to letters
-  TEST_MODE && console.log(`Note names in chord ${i}: `,notes)
-  return `${emoji.get("zap")} ${notes.join(" ")} x ${repeats}`; //${notes.map(n => noteNames[n])
+  const namedNotes = notes.map(n => noteNames[n%noteNames.length]) // convert from numbers to letters
+  TEST_MODE && console.log(`Chord ${i}: `,notes,namedNotes,`\n`)
+  return `${emoji.get("zap")} ${namedNotes.join(" ")} x ${repeats}`; //${notes.map(n => noteNames[n])
 }
 
 const generateScore = () => {
-  let totalChords = 3 + rand(8)
+  let totalChords = MIN_CHORDS + rand(MAX_CHORDS - MIN_CHORDS + 1)
   let transposeScore = Math.random() > .5;
+  TEST_MODE && console.log("\nInfo:")
   TEST_MODE && transposeScore && console.log(`Transposing score!`)
   let chords = [];
   for (var i = 0; i < totalChords; i++) {
@@ -81,20 +96,12 @@ ${randomEmojiString(6)}`
 );
 }
 
-const sendTweet = async (status) => {
-  twitterClient.tweets.statusesUpdate({
-      status: status
-  }).then (response => {
-      console.log("Tweeted!", response)
-  }).catch(err => {
-      console.error(err)
-  })
-}
-
 const init = async () => {
   let score = generateScore();
-  console.log(score)
-  let tweetResult = await sendTweet(score);
+  TEST_MODE && console.log("Tweet:\n",score)
+  if(!TEST_MODE){
+    await sendTweet(score);
+  }
 }
 
 init()
