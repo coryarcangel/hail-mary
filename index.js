@@ -1,4 +1,6 @@
-require('dotenv').config()
+const TEST_MODE = true; //Won't tweet, + lots of extra logs if true
+const VERBOSE = false;
+require('dotenv').config({ path: '.env-old' })
 const {TwitterClient} = require('twitter-api-client')
 const fs = require("fs")
 const emoji = require('node-emoji')
@@ -20,8 +22,6 @@ const sendTweet = async (status) => {
   })
 }
 
-const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
-
 
 //chord duration should never be less that
 
@@ -32,6 +32,9 @@ const randomEmojiString = (count) => {
   }
   return output;
 }
+
+let dynamicEmojis = ["airplane","racing_car","horse_racing","running","turtle"].map(name => emoji.get(name));
+
 
 const rand = (range) => Math.floor(Math.random()*range);
 
@@ -45,28 +48,27 @@ const minNotesInChord = 1;
 //it should look like a triangle
 //first lower amt is 3
 
-let MAX_REPEATS_EVER = 10;
-let MAX_REPEATS = 10;
-let MIN_REPEATS = 1;
+let MAX_REPEATS_EVER = 20;
+let MAX_REPEATS = MAX_REPEATS_EVER;
+let MIN_REPEATS = 3;
 let MAX_NOTES_PER_CHORD = 6;
 let MIN_CHORDS = 3;
 let MAX_CHORDS = 10;
 
 let TOTAL_CHORDS = MIN_CHORDS + rand(MAX_CHORDS - MIN_CHORDS + 1);
-let NOTES_PER_CHORD = 1+rand(MAX_NOTES_PER_CHORD);
+let NOTES_PER_CHORD = MAX_NOTES_PER_CHORD - 2 + rand(3);
 //Create a line representing a chord.
 //We need to know which chord of how many we're on, and whether to transpose.
 const chord = (i,TOTAL_CHORDS,transpose) => {
   //Divide number of chords into percentage jumps.
   let octatonicLikelihood = (1/TOTAL_CHORDS)* i;
-  //parabola, from 0 - Max over set of chords
-  let maxRepeats = (MAX_REPEATS/TOTAL_CHORDS) * Math.pow(Math.pow(TOTAL_CHORDS,2) - Math.pow(i-TOTAL_CHORDS,2),.5);
-  maxRepeats = MAX_REPEATS_EVER * Math.pow(Math.E,(-1/TOTAL_CHORDS)*Math.pow(TOTAL_CHORDS-i,2));
-  //likelihood of 1 at first is 100%, and likelihood of 10/100 at end is 100%
-  let repeats = Math.max(1,MIN_REPEATS+rand(maxRepeats-MIN_REPEATS));//1 + rand(maxRepeats);
-  MIN_REPEATS = repeats; //Next time, don't repeat any less than this time.
-  TEST_MODE && console.log(`NOTES_PER_CHORD: ${NOTES_PER_CHORD}, Chord ${i}: `,Math.floor(octatonicLikelihood*100)+"% octatonic, max repeats:",maxRepeats);
+  //parabola, from Max - 0 over set of chords
+  let maxRepeats = MIN_REPEATS + (MAX_REPEATS_EVER-MIN_REPEATS) * Math.pow(Math.E,-1*Math.pow(TOTAL_CHORDS,-1.5)*Math.pow(i,2));
+  let repeats = Math.min(MAX_REPEATS,Math.max(MIN_REPEATS,Math.floor(maxRepeats/(1+Math.random()*.5))));//Math.max(1,MIN_REPEATS+rand(maxRepeats-MIN_REPEATS));//1 + rand(maxRepeats);
+  MAX_REPEATS = repeats; //Next time, don't repeat any less than this time.
+  TEST_MODE && VERBOSE && console.log(`NOTES_PER_CHORD: ${NOTES_PER_CHORD}, Chord ${i}: `,Math.floor(octatonicLikelihood*100)+"% octatonic, max repeats:",maxRepeats);
   let notes = [];
+  let dynamic = Math.floor(((i)/TOTAL_CHORDS)*4);
   //Add unique notes to the chord until we have 3
   while(notes.length < NOTES_PER_CHORD){
     let note;
@@ -84,27 +86,28 @@ const chord = (i,TOTAL_CHORDS,transpose) => {
     }
   }
   //Next time, don't use any more notes than this time.
-  NOTES_PER_CHORD = 1+rand(NOTES_PER_CHORD);
+  NOTES_PER_CHORD = Math.max(1,Math.ceil(NOTES_PER_CHORD/(1+Math.random()*1.5)))
   if(transpose){
     notes = notes.map(n => n+1);
   }
   const namedNotes = notes.map(n => noteNames[n%noteNames.length]) // convert from numbers to letters
-  TEST_MODE && console.log(`Chord ${i}: `,notes,namedNotes,`\n`)
-  return `${emoji.get("zap")} ${namedNotes.join(" ")} ${emoji.get("repeat_one")} x${repeats}`; //${notes.map(n => noteNames[n])
+  TEST_MODE && VERBOSE && console.log(`Chord ${i}: `,notes,namedNotes,`\n`)
+  return `${emoji.get("zap")} ${namedNotes.join(" ")} ${dynamicEmojis[dynamic]} ${emoji.get("repeat_one")} x${repeats}`; //${notes.map(n => noteNames[n])
 }
 
 const generateScore = () => {
   let transposeScore = Math.random() > .5;
-  TEST_MODE && console.log("\nInfo:")
-  TEST_MODE && transposeScore && console.log(`Transposing score!`)
+  TEST_MODE && VERBOSE && console.log("\nInfo:")
+  TEST_MODE && VERBOSE && transposeScore && console.log(`Transposing score!`)
   let chords = [];
   for (var i = 0; i < TOTAL_CHORDS; i++) {
     chords.push(chord(i,TOTAL_CHORDS-1,transposeScore));
   }
+  let emojiCount = Math.floor(chords[0].length/2)
   return (
 
-`${randomEmojiString(8)}
-${emoji.get("fire").repeat(7)}
+`${randomEmojiString(emojiCount)}
+${emoji.get("fire").repeat(emojiCount-1)}
 ${chords.join(lineBreak)}
 ${emoji.get("cloud").repeat(3)}
 ${emoji.get("back").repeat(2)}

@@ -1,5 +1,5 @@
 node_modules
 .DS_Store
-.env
+.env*
 yarn.lock
 yarn-error.log
