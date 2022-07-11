@@ -1,4 +1,4 @@
-const TEST_MODE = true; //Won't tweet, + lots of extra logs if true
+const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
 const VERBOSE = false;
 require('dotenv').config({ path: '.env-old' })
 const {TwitterClient} = require('twitter-api-client')
