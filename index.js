@@ -1,6 +1,6 @@
 const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
 const VERBOSE = false;
-require('dotenv').config({ path: '.env-old' })
+require('dotenv').config()
 const {TwitterClient} = require('twitter-api-client')
 const fs = require("fs")
 const emoji = require('node-emoji')
