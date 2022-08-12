@@ -48,7 +48,7 @@ const minNotesInChord = 1;
 //it should look like a triangle
 //first lower amt is 3
 
-let MAX_REPEATS_EVER = 20;
+let MAX_REPEATS_EVER = 60;
 let MAX_REPEATS = MAX_REPEATS_EVER;
 let MIN_REPEATS = 3;
 let MAX_NOTES_PER_CHORD = 6;
