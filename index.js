@@ -22,13 +22,20 @@ const sendTweet = async (status) => {
   })
 }
 
+//Originally these flags got their own code before a system was made to accommodate every country
+let originalFlags = ["uk","usa","it","fr","kr","ru","jp","cn","de","es","gb","cn"];
 
 //chord duration should never be less that
 
 const randomEmojiString = (count) => {
   let output = "";
   for (var i = 0; i < count; i++) {
-    output += emoji.random().emoji;
+    let nextEmoji = emoji.random();
+    //if the key of the random emoji starts with "flag-" it's a flag, so keep trying
+    while(nextEmoji.key.indexOf("flag-") === 0 || originalFlags.indexOf(nextEmoji.key) > -1){
+      nextEmoji = emoji.random()
+    }
+    output += nextEmoji.emoji;
   }
   return output;
 }
