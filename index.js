@@ -1,25 +1,25 @@
 const TEST_MODE = false; //Won't tweet, + lots of extra logs if true
 const VERBOSE = false;
 require('dotenv').config()
-const {TwitterClient} = require('twitter-api-client')
+const {TwitterApi} = require('twitter-api-v2')
 const fs = require("fs")
 const emoji = require('node-emoji')
 
-const twitterClient = new TwitterClient({
-    apiKey: process.env.TWITTER_API_KEY,
-    apiSecret: process.env.TWITTER_API_SECRET,
+const twitterClient = new TwitterApi({
+    appKey: process.env.TWITTER_API_KEY,
+    appSecret: process.env.TWITTER_API_SECRET,
     accessToken: process.env.TWITTER_ACCESS_TOKEN,
-    accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+    accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 })
 
 const sendTweet = async (status) => {
-  twitterClient.tweets.statusesUpdate({
-      status: status
-  }).then (response => {
-      console.log("Tweeted!", response)
-  }).catch(err => {
-      console.error(err)
-  })
+  try {
+    const response = await twitterClient.v2.tweet(status)
+    console.log("Tweeted!", response)
+  } catch (err) {
+    console.error(err)
+    process.exitCode = 1
+  }
 }
 
 //Originally these flags got their own code before a system was made to accommodate every country
